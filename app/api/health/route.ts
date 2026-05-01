@@ -8,10 +8,8 @@ export async function GET() {
   const checks: Record<string, string> = {}
 
   try {
-    const pingKey = '_health:ping'
-    await kv.set(pingKey, Date.now().toString(), { ex: 60 })
-    const value = await kv.get(pingKey)
-    checks.kv = value ? 'ok' : 'empty-read'
+    await kv.get('_health:probe')
+    checks.kv = 'ok'
   } catch (err) {
     checks.kv = `error: ${err instanceof Error ? err.message : String(err)}`
   }

@@ -41,6 +41,7 @@ export default function ListenPage() {
   const [showAnswer, setShowAnswer] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const progressChainRef = useRef<Promise<unknown>>(Promise.resolve())
 
   const fetchNext = useCallback(async (excludeIds: string[]) => {
     setPhase('loading')
@@ -60,7 +61,6 @@ export default function ListenPage() {
       }
       setCard(data.item as DrillCard)
       setPhase('listening')
-      setTimeout(() => inputRef.current?.focus(), 50)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
       setPhase('error')
@@ -71,11 +71,17 @@ export default function ListenPage() {
     fetchNext([])
   }, [fetchNext])
 
-  useEffect(() => {
-    if (phase === 'listening' && card?.audioUrl && audioRef.current) {
-      audioRef.current.play().catch(() => {})
-    }
-  }, [phase, card?.audioUrl])
+  function queueProgressWrite(itemId: string, rating: number) {
+    progressChainRef.current = progressChainRef.current
+      .catch(() => {})
+      .then(() =>
+        fetch('/api/progress', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ itemId, rating }),
+        })
+      )
+  }
 
   async function submit() {
     if (!card || grading || !typed.trim()) return
@@ -85,8 +91,7 @@ export default function ListenPage() {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          nativeText: card.nativeText,
-          expectedEnglish: card.expectedEnglish,
+          itemId: card.itemId,
           typedAnswer: typed,
         }),
       })
@@ -100,15 +105,7 @@ export default function ListenPage() {
         wrong: s.wrong + (result.verdict === 'wrong' ? 1 : 0),
       }))
       setPhase('graded')
-      void fetch('/api/progress', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          language: LANGUAGE,
-          itemId: card.itemId,
-          rating: result.rating,
-        }),
-      }).catch(() => {})
+      queueProgressWrite(card.itemId, result.rating)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
       setPhase('error')
@@ -117,7 +114,7 @@ export default function ListenPage() {
     }
   }
 
-  async function override(rating: Rating) {
+  function override(rating: Rating) {
     if (!card) return
     setStats((s) => {
       if (!grade) return s
@@ -134,11 +131,7 @@ export default function ListenPage() {
         return flip(grade.verdict === 'correct' ? 'correct' : 'almost', 'wrong')
       return s
     })
-    void fetch('/api/progress', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ language: LANGUAGE, itemId: card.itemId, rating }),
-    }).catch(() => {})
+    queueProgressWrite(card.itemId, rating)
     advance()
   }
 
@@ -149,11 +142,12 @@ export default function ListenPage() {
     fetchNext(nextSeen)
   }
 
-  function replay() {
+  function playAudio() {
     if (audioRef.current) {
       audioRef.current.currentTime = 0
       audioRef.current.play().catch(() => {})
     }
+    inputRef.current?.focus()
   }
 
   const verdictColor =
@@ -222,7 +216,7 @@ export default function ListenPage() {
             )}
 
             <button
-              onClick={replay}
+              onClick={playAudio}
               className="w-full py-4 rounded-xl bg-ink text-cream font-medium text-base active:bg-ink/80"
             >
               ▶ Play audio

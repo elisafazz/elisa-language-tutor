@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { Rating, type Grade } from 'ts-fsrs'
 import { loadCard, rateCard, saveCard } from '@/lib/fsrs'
-import type { Language } from '@/lib/content/types'
+import { itemById } from '@/lib/content'
+import { isScenario } from '@/lib/content/types'
 
 export const runtime = 'nodejs'
 
@@ -11,19 +12,23 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: 'invalid body' }, { status: 400 })
 
-  const { language, itemId, rating } = body as {
-    language?: Language
+  const { itemId, rating } = body as {
     itemId?: string
     rating?: number
   }
 
-  if (!language || !itemId || typeof rating !== 'number' || !RATING_VALUES.has(rating)) {
+  if (!itemId || typeof rating !== 'number' || !RATING_VALUES.has(rating)) {
     return NextResponse.json({ error: 'missing or invalid fields' }, { status: 400 })
   }
 
-  const card = await loadCard(language, itemId)
+  const item = itemById(itemId)
+  if (!item || isScenario(item)) {
+    return NextResponse.json({ error: 'unknown item' }, { status: 404 })
+  }
+
+  const card = await loadCard(item.language, itemId)
   const next = rateCard(card, rating as Grade)
-  await saveCard(language, itemId, next)
+  await saveCard(item.language, itemId, next)
 
   return NextResponse.json({
     ok: true,

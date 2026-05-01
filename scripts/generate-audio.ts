@@ -68,8 +68,10 @@ async function generateOne(item: ContentItem): Promise<string> {
 }
 
 async function main() {
-  const items = onlyLanguage ? allContent.filter((i) => i.language === onlyLanguage) : allContent
-  console.log(`Audio pre-gen: ${items.length} items${onlyLanguage ? ` (${onlyLanguage} only)` : ''}${force ? ' [FORCE]' : ''}`)
+  const includeWarmups = process.argv.includes('--include-warmups')
+  let items = onlyLanguage ? allContent.filter((i) => i.language === onlyLanguage) : allContent
+  if (!includeWarmups) items = items.filter((i) => i.type !== 'warmup')
+  console.log(`Audio pre-gen: ${items.length} items${onlyLanguage ? ` (${onlyLanguage} only)` : ''}${force ? ' [FORCE]' : ''}${includeWarmups ? ' [+warmups]' : ''}`)
 
   let generated = 0
   let skipped = 0

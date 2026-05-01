@@ -50,10 +50,6 @@ function pickNext(items: ContentItem[], cards: Map<string, Card>): ContentItem |
     const idx = Math.floor(Math.random() * newItems.length)
     return newItems[idx]
   }
-  if (items.length > 0) {
-    const idx = Math.floor(Math.random() * items.length)
-    return items[idx]
-  }
   return null
 }
 

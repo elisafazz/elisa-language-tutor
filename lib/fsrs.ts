@@ -1,7 +1,7 @@
 import { fsrs, generatorParameters, Card, Rating, createEmptyCard, State, type Grade } from 'ts-fsrs'
 import { kv } from '@vercel/kv'
 
-const params = generatorParameters({ enable_fuzz: true, maximum_interval: 30 })
+const params = generatorParameters({ enable_fuzz: true, maximum_interval: 365 })
 export const scheduler = fsrs(params)
 
 const USER = 'elisa'
@@ -59,10 +59,12 @@ export async function loadAllCards(language: string): Promise<Map<string, Card>>
   const ids = await listCardIds(language)
   const map = new Map<string, Card>()
   if (ids.length === 0) return map
-  for (const id of ids) {
-    const stored = await kv.get<StoredCard>(cardKey(language, id))
+  const keys = ids.map((id) => cardKey(language, id))
+  const values = await kv.mget<(StoredCard | null)[]>(...keys)
+  ids.forEach((id, i) => {
+    const stored = values[i]
     if (stored) map.set(id, deserializeCard(stored))
-  }
+  })
   return map
 }
 

@@ -3,7 +3,9 @@ import type { NextRequest } from 'next/server'
 import { COOKIE_NAME, verifySession } from '@/lib/auth'
 
 export const config = {
-  matcher: ['/((?!login|api/auth|api/health|_next|favicon.ico|manifest.webmanifest|apple-touch-icon.png).*)'],
+  matcher: [
+    '/((?!login(?:$|/)|api/auth(?:$|/)|_next/|favicon\\.ico$|manifest\\.webmanifest$|apple-touch-icon\\.png$|robots\\.txt$|sitemap\\.xml$).*)',
+  ],
 }
 
 export async function middleware(req: NextRequest) {
