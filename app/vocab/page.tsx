@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Rating } from 'ts-fsrs'
 import FavoriteStar from '@/components/FavoriteStar'
+import { readClientLanguage } from '@/lib/language'
+import type { Language } from '@/lib/content/types'
 
 interface DrillCard {
   itemId: string
@@ -19,8 +21,6 @@ interface DrillCard {
 
 type Phase = 'loading' | 'front' | 'back' | 'done' | 'error'
 
-const LANGUAGE = 'italian'
-
 export default function VocabPage() {
   const [phase, setPhase] = useState<Phase>('loading')
   const [card, setCard] = useState<DrillCard | null>(null)
@@ -28,15 +28,16 @@ export default function VocabPage() {
   const [seenIds, setSeenIds] = useState<string[]>([])
   const [stats, setStats] = useState({ shown: 0, shadowed: 0 })
   const [didShadow, setDidShadow] = useState(false)
+  const [language, setLanguage] = useState<Language>('italian')
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const progressChainRef = useRef<Promise<unknown>>(Promise.resolve())
 
-  const fetchNext = useCallback(async (excludeIds: string[]) => {
+  const fetchNext = useCallback(async (excludeIds: string[], lang: Language) => {
     setPhase('loading')
     setDidShadow(false)
     setError(null)
     try {
-      const params = new URLSearchParams({ language: LANGUAGE })
+      const params = new URLSearchParams({ language: lang })
       if (excludeIds.length) params.set('exclude', excludeIds.slice(-30).join(','))
       const res = await fetch(`/api/next-drill?${params.toString()}`)
       if (!res.ok) throw new Error(`next-drill ${res.status}`)
@@ -54,7 +55,9 @@ export default function VocabPage() {
   }, [])
 
   useEffect(() => {
-    fetchNext([])
+    const lang = readClientLanguage()
+    setLanguage(lang)
+    fetchNext([], lang)
   }, [fetchNext])
 
   function queueProgressWrite(itemId: string, rating: number) {
@@ -99,7 +102,7 @@ export default function VocabPage() {
     setStats((s) => ({ ...s, shown: s.shown + 1 }))
     const nextSeen = [...seenIds, card.itemId]
     setSeenIds(nextSeen)
-    fetchNext(nextSeen)
+    fetchNext(nextSeen, language)
   }
 
   return (
@@ -119,7 +122,7 @@ export default function VocabPage() {
         <div className="space-y-3">
           <p className="text-terra text-sm">Something broke: {error}</p>
           <button
-            onClick={() => fetchNext(seenIds)}
+            onClick={() => fetchNext(seenIds, language)}
             className="px-4 py-2 rounded-lg bg-ink text-cream text-sm"
           >
             Try again
@@ -182,10 +185,10 @@ export default function VocabPage() {
                 onClick={reveal}
                 className="w-full py-4 rounded-xl bg-ink text-cream font-medium text-base"
               >
-                Show Italian + audio
+                Show {language === 'spanish' ? 'Spanish' : 'Italian'} + audio
               </button>
               <p className="text-xs text-muted text-center">
-                Try to recall the Italian out loud first.
+                Try to recall the {language === 'spanish' ? 'Spanish' : 'Italian'} out loud first.
               </p>
             </section>
           )}

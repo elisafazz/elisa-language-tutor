@@ -18,6 +18,7 @@ interface Turn {
   content: string
   gloss?: string
   correction?: string | null
+  showGloss?: boolean
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -172,7 +173,20 @@ export default function ScenarioPage() {
               <div className="bg-white border border-line rounded-2xl p-4">
                 <p className="text-base text-ink font-serif">{t.content}</p>
                 {t.gloss && (
-                  <p className="text-xs text-muted mt-2">{t.gloss}</p>
+                  t.showGloss ? (
+                    <p className="text-xs text-muted mt-2">{t.gloss}</p>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setTurns((prev) =>
+                          prev.map((x, idx) => (idx === i ? { ...x, showGloss: true } : x))
+                        )
+                      }}
+                      className="text-[10px] uppercase tracking-wide text-muted hover:text-ink mt-2"
+                    >
+                      Show translation
+                    </button>
+                  )
                 )}
               </div>
             ) : (

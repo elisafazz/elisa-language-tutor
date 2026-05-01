@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Rating } from 'ts-fsrs'
+import { readClientLanguage } from '@/lib/language'
+import type { Language } from '@/lib/content/types'
 
 interface DrillCard {
   itemId: string
@@ -27,7 +29,7 @@ interface GradeResult {
 
 type Phase = 'loading' | 'listening' | 'graded' | 'done' | 'error'
 
-const LANGUAGE = 'italian'
+const SUMMARY_THRESHOLD = 5
 
 export default function ListenPage() {
   const [phase, setPhase] = useState<Phase>('loading')
@@ -39,18 +41,20 @@ export default function ListenPage() {
   const [seenIds, setSeenIds] = useState<string[]>([])
   const [stats, setStats] = useState({ correct: 0, almost: 0, wrong: 0 })
   const [showAnswer, setShowAnswer] = useState(false)
+  const [language, setLanguage] = useState<Language>('italian')
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const progressChainRef = useRef<Promise<unknown>>(Promise.resolve())
+  const missQueueRef = useRef<{ itemId: string; typedAnswer: string }[]>([])
 
-  const fetchNext = useCallback(async (excludeIds: string[]) => {
+  const fetchNext = useCallback(async (excludeIds: string[], lang: Language) => {
     setPhase('loading')
     setTyped('')
     setGrade(null)
     setShowAnswer(false)
     setError(null)
     try {
-      const params = new URLSearchParams({ language: LANGUAGE })
+      const params = new URLSearchParams({ language: lang })
       if (excludeIds.length) params.set('exclude', excludeIds.slice(-30).join(','))
       const res = await fetch(`/api/next-drill?${params.toString()}`)
       if (!res.ok) throw new Error(`next-drill ${res.status}`)
@@ -68,8 +72,21 @@ export default function ListenPage() {
   }, [])
 
   useEffect(() => {
-    fetchNext([])
+    const lang = readClientLanguage()
+    setLanguage(lang)
+    fetchNext([], lang)
   }, [fetchNext])
+
+  function flushMissesIfReady() {
+    if (missQueueRef.current.length < SUMMARY_THRESHOLD) return
+    const batch = missQueueRef.current.slice(0, 30)
+    missQueueRef.current = []
+    void fetch('/api/session-summary', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ language, misses: batch }),
+    }).catch(() => {})
+  }
 
   function queueProgressWrite(itemId: string, rating: number) {
     progressChainRef.current = progressChainRef.current
@@ -106,6 +123,10 @@ export default function ListenPage() {
       }))
       setPhase('graded')
       queueProgressWrite(card.itemId, result.rating)
+      if (result.verdict !== 'correct') {
+        missQueueRef.current.push({ itemId: card.itemId, typedAnswer: typed })
+        flushMissesIfReady()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
       setPhase('error')
@@ -139,7 +160,7 @@ export default function ListenPage() {
     if (!card) return
     const nextSeen = [...seenIds, card.itemId]
     setSeenIds(nextSeen)
-    fetchNext(nextSeen)
+    fetchNext(nextSeen, language)
   }
 
   function playAudio() {
@@ -174,7 +195,7 @@ export default function ListenPage() {
         <div className="space-y-3">
           <p className="text-terra text-sm">Something broke: {error}</p>
           <button
-            onClick={() => fetchNext(seenIds)}
+            onClick={() => fetchNext(seenIds, language)}
             className="px-4 py-2 rounded-lg bg-ink text-cream text-sm"
           >
             Try again
@@ -227,7 +248,7 @@ export default function ListenPage() {
                 onClick={() => setShowAnswer(true)}
                 className="mt-2 text-xs text-muted underline"
               >
-                Show Italian text
+                Show {language === 'spanish' ? 'Spanish' : 'Italian'} text
               </button>
             )}
 

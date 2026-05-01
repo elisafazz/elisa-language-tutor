@@ -1,4 +1,8 @@
 import Link from 'next/link'
+import LanguageToggle from '@/components/LanguageToggle'
+import { getSessionSummary } from '@/lib/sessions'
+
+export const dynamic = 'force-dynamic'
 
 const TRIP_DATE = new Date('2026-05-16T00:00:00')
 
@@ -17,8 +21,28 @@ const MODES = [
   { id: 'favorites', label: 'Favorites', sub: 'Saved phrases.', href: '/favorites' },
 ]
 
-export default function Dashboard() {
+function isRecent(iso: string): boolean {
+  const t = new Date(iso).getTime()
+  if (!Number.isFinite(t)) return false
+  return Date.now() - t < 24 * 60 * 60 * 1000
+}
+
+export default async function Dashboard() {
   const days = daysUntilTrip()
+  const [italianSummary, spanishSummary] = await Promise.all([
+    getSessionSummary('italian').catch(() => null),
+    getSessionSummary('spanish').catch(() => null),
+  ])
+
+  const recent = [
+    italianSummary && isRecent(italianSummary.recordedAt)
+      ? { lang: 'italian', summary: italianSummary }
+      : null,
+    spanishSummary && isRecent(spanishSummary.recordedAt)
+      ? { lang: 'spanish', summary: spanishSummary }
+      : null,
+  ].filter((x): x is NonNullable<typeof x> => !!x)
+
   return (
     <main className="min-h-screen px-5 py-8 max-w-md mx-auto">
       <header className="mb-8 flex items-start justify-between">
@@ -28,14 +52,38 @@ export default function Dashboard() {
             {days} {days === 1 ? 'day' : 'days'} until Italy
           </p>
         </div>
-        <Link
-          href="/profile"
-          className="text-xs text-muted hover:text-ink mt-2"
-          aria-label="Profile"
-        >
-          Profile →
-        </Link>
+        <div className="flex items-center gap-3 mt-2">
+          <LanguageToggle />
+          <Link
+            href="/profile"
+            className="text-xs text-muted hover:text-ink"
+            aria-label="Profile"
+          >
+            Profile →
+          </Link>
+        </div>
       </header>
+
+      {recent.length > 0 && (
+        <section className="mb-8">
+          <p className="text-xs uppercase tracking-wide text-muted mb-3">
+            Last session pattern
+          </p>
+          {recent.map(({ lang, summary }) => (
+            <div
+              key={lang}
+              className="p-4 rounded-xl border border-gold/30 bg-gold/5 mb-2"
+            >
+              <p className="text-xs text-muted">{lang}</p>
+              <p className="text-sm text-ink mt-1">
+                {summary.patterns.length > 0
+                  ? `Weak in: ${summary.patterns.join(', ')}`
+                  : 'Nothing to flag — clean run.'}
+              </p>
+            </div>
+          ))}
+        </section>
+      )}
 
       <section className="mb-8">
         <p className="text-xs uppercase tracking-wide text-muted mb-3">
