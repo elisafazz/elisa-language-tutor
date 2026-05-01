@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 const TRIP_DATE = new Date('2026-05-16T00:00:00')
 
 function daysUntilTrip() {
@@ -6,14 +8,21 @@ function daysUntilTrip() {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
 }
 
-const MODES = [
-  { id: 'listen', label: 'Listen', sub: 'Hear it. Type the meaning.' },
+interface Mode {
+  id: string
+  label: string
+  sub: string
+  href?: string
+}
+
+const MODES: Mode[] = [
+  { id: 'listen', label: 'Listen', sub: 'Hear it. Type the meaning.', href: '/listen' },
   { id: 'scenario', label: 'Scenario', sub: 'Order a coffee. Check in. Get directions.' },
   { id: 'vocab', label: 'Vocab', sub: 'Flashcards with shadowing.' },
   { id: 'refresher', label: 'Refresher', sub: 'Grammar, gender, formal Lei.' },
   { id: 'warmup', label: 'Warmup', sub: 'Tongue twisters. Wake up the mouth.' },
   { id: 'favorites', label: 'Favorites', sub: 'Saved phrases. Offline ready.' },
-] as const
+]
 
 export default function Dashboard() {
   const days = daysUntilTrip()
@@ -42,23 +51,37 @@ export default function Dashboard() {
       </section>
 
       <section className="space-y-2">
-        {MODES.map((mode) => (
-          <div
-            key={mode.id}
-            className="block p-4 rounded-xl border border-line bg-white opacity-60 cursor-not-allowed"
-            aria-disabled="true"
-          >
-            <div className="flex items-baseline justify-between">
-              <span className="text-base font-medium text-ink">{mode.label}</span>
-              <span className="text-[10px] uppercase tracking-wide text-muted">soon</span>
+        {MODES.map((mode) =>
+          mode.href ? (
+            <Link
+              key={mode.id}
+              href={mode.href}
+              className="block p-4 rounded-xl border border-line bg-white hover:bg-cream/50 transition-colors"
+            >
+              <div className="flex items-baseline justify-between">
+                <span className="text-base font-medium text-ink">{mode.label}</span>
+                <span className="text-[10px] uppercase tracking-wide text-sage">ready</span>
+              </div>
+              <p className="text-sm text-muted mt-1">{mode.sub}</p>
+            </Link>
+          ) : (
+            <div
+              key={mode.id}
+              className="block p-4 rounded-xl border border-line bg-white opacity-60 cursor-not-allowed"
+              aria-disabled="true"
+            >
+              <div className="flex items-baseline justify-between">
+                <span className="text-base font-medium text-ink">{mode.label}</span>
+                <span className="text-[10px] uppercase tracking-wide text-muted">soon</span>
+              </div>
+              <p className="text-sm text-muted mt-1">{mode.sub}</p>
             </div>
-            <p className="text-sm text-muted mt-1">{mode.sub}</p>
-          </div>
-        ))}
+          )
+        )}
       </section>
 
       <footer className="mt-12 text-xs text-muted text-center">
-        Infra is live. Drill modes ship next — start with Listen.
+        Infra is live. More modes shipping daily.
       </footer>
     </main>
   )
