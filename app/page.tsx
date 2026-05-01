@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 const TRIP_DATE = new Date('2026-05-16T00:00:00')
 
 function daysUntilTrip() {
@@ -9,12 +7,12 @@ function daysUntilTrip() {
 }
 
 const MODES = [
-  { href: '/listen', label: 'Listen', sub: 'Hear it. Type the meaning.', status: 'coming-soon' },
-  { href: '/scenario', label: 'Scenario', sub: 'Order a coffee. Check in. Get directions.', status: 'coming-soon' },
-  { href: '/vocab', label: 'Vocab', sub: 'Flashcards with shadowing.', status: 'coming-soon' },
-  { href: '/refresher', label: 'Refresher', sub: 'Grammar, gender, formal Lei.', status: 'coming-soon' },
-  { href: '/warmup', label: 'Warmup', sub: 'Tongue twisters. Wake up the mouth.', status: 'coming-soon' },
-  { href: '/favorites', label: 'Favorites', sub: 'Saved phrases. Offline ready.', status: 'coming-soon' },
+  { id: 'listen', label: 'Listen', sub: 'Hear it. Type the meaning.' },
+  { id: 'scenario', label: 'Scenario', sub: 'Order a coffee. Check in. Get directions.' },
+  { id: 'vocab', label: 'Vocab', sub: 'Flashcards with shadowing.' },
+  { id: 'refresher', label: 'Refresher', sub: 'Grammar, gender, formal Lei.' },
+  { id: 'warmup', label: 'Warmup', sub: 'Tongue twisters. Wake up the mouth.' },
+  { id: 'favorites', label: 'Favorites', sub: 'Saved phrases. Offline ready.' },
 ] as const
 
 export default function Dashboard() {
@@ -34,7 +32,7 @@ export default function Dashboard() {
           {[3, 10, 30].map((m) => (
             <button
               key={m}
-              className="flex-1 py-2.5 rounded-lg border border-line bg-white text-ink text-sm font-medium hover:border-sage transition-colors"
+              className="flex-1 py-2.5 rounded-lg border border-line bg-white text-ink text-sm font-medium opacity-60 cursor-not-allowed"
               disabled
             >
               {m} min
@@ -45,22 +43,22 @@ export default function Dashboard() {
 
       <section className="space-y-2">
         {MODES.map((mode) => (
-          <Link
-            key={mode.href}
-            href={mode.href}
-            className="block p-4 rounded-xl border border-line bg-white opacity-60"
+          <div
+            key={mode.id}
+            className="block p-4 rounded-xl border border-line bg-white opacity-60 cursor-not-allowed"
+            aria-disabled="true"
           >
             <div className="flex items-baseline justify-between">
               <span className="text-base font-medium text-ink">{mode.label}</span>
               <span className="text-[10px] uppercase tracking-wide text-muted">soon</span>
             </div>
             <p className="text-sm text-muted mt-1">{mode.sub}</p>
-          </Link>
+          </div>
         ))}
       </section>
 
       <footer className="mt-12 text-xs text-muted text-center">
-        Phase 1 scaffold. Modes ship across phases 3-5.
+        Infra is live. Drill modes ship next — start with Listen.
       </footer>
     </main>
   )
