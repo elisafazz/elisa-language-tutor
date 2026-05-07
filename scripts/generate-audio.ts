@@ -28,6 +28,13 @@ const VOICE_BY_LANG: Record<Language, string> = {
   spanish: 'shimmer',
 }
 
+const INSTRUCTIONS_BY_LANG: Record<Language, string> = {
+  italian:
+    'Parla in italiano con un accento italiano nativo. Pronuncia ogni parola come una madrelingua italiana, con vocali aperte e ritmo naturale italiano. Non usare un accento inglese.',
+  spanish:
+    'Habla en español con un acento español nativo (castellano o latinoamericano neutro). Pronuncia cada palabra como una hablante nativa de español, con ritmo natural. No uses acento inglés.',
+}
+
 async function audioUrlKey(itemId: string): Promise<string> {
   return `audio:url:${itemId}`
 }
@@ -47,10 +54,10 @@ async function generateOne(item: ContentItem): Promise<string> {
   const voice = VOICE_BY_LANG[item.language]
 
   const response = await openai.audio.speech.create({
-    model: 'tts-1',
+    model: 'gpt-4o-mini-tts',
     voice: voice as 'nova' | 'shimmer' | 'alloy' | 'echo' | 'fable' | 'onyx',
     input: text,
-    speed: 0.95,
+    instructions: INSTRUCTIONS_BY_LANG[item.language],
   })
 
   const buffer = Buffer.from(await response.arrayBuffer())
