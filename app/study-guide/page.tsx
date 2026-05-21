@@ -485,7 +485,7 @@ export default function StudyGuidePage() {
       </header>
 
       <div className="mb-5">
-        <h1 className="font-serif text-3xl text-ink">Studio</h1>
+        <h1 className="font-serif text-3xl text-ink">Study Guide</h1>
         <p className="text-sm text-muted mt-1">Italian travel reference. All offline.</p>
       </div>
 
