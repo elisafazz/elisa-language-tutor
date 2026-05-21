@@ -43,6 +43,13 @@ function sectionMatchCount(section: (typeof studyGuideSections)[number], q: stri
       s.grammarNotes.some((n) => n.feature.toLowerCase().includes(q) || n.explanation.toLowerCase().includes(q))
     ).length
   }
+  if (section.type === 'vocab') {
+    return section.items.filter((it) =>
+      it.italian.toLowerCase().includes(q) ||
+      it.english.toLowerCase().includes(q) ||
+      (it.note?.toLowerCase().includes(q) ?? false)
+    ).length
+  }
   return 0
 }
 
@@ -305,6 +312,7 @@ function Section({
     if (section.type === 'verbs') return section.verbs.length
     if (section.type === 'past') return section.pastVerbs.length
     if (section.type === 'example-scenarios') return section.scenarios.length
+    if (section.type === 'vocab') return section.items.length
     return null
   })()
 
@@ -409,6 +417,35 @@ function Section({
             </div>
           )}
 
+          {section.type === 'vocab' && (
+            <div className="py-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                {(query
+                  ? section.items.filter((it) =>
+                      it.italian.toLowerCase().includes(query) ||
+                      it.english.toLowerCase().includes(query) ||
+                      (it.note?.toLowerCase().includes(query) ?? false)
+                    )
+                  : section.items
+                ).map((item, i) => (
+                  <div key={i} className="flex items-baseline gap-3 py-2 px-2 border-b border-line/40 last:border-b-0">
+                    <span className="text-ink font-medium flex-1">{item.italian}</span>
+                    <span className="text-muted text-sm flex-1 text-right">{item.english}</span>
+                  </div>
+                ))}
+              </div>
+              {(query ? section.items.filter((it) => it.note && (it.italian.toLowerCase().includes(query) || it.english.toLowerCase().includes(query) || it.note.toLowerCase().includes(query))) : section.items.filter((it) => it.note)).length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {(query ? section.items.filter((it) => it.note && (it.italian.toLowerCase().includes(query) || it.english.toLowerCase().includes(query) || it.note.toLowerCase().includes(query))) : section.items.filter((it) => it.note)).map((item, i) => (
+                    <p key={i} className="text-xs text-muted italic px-1">
+                      <span className="font-medium text-ink/70 not-italic">{item.italian}:</span> {item.note}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {section.type === 'example-scenarios' && (
             <div className="py-2">
               {(query
@@ -451,6 +488,19 @@ export default function StudyGuidePage() {
         <h1 className="font-serif text-3xl text-ink">Studio</h1>
         <p className="text-sm text-muted mt-1">Italian travel reference. All offline.</p>
       </div>
+
+      <Link
+        href="/study-guide/flashcards"
+        className="block mb-5 p-4 rounded-xl border border-ink bg-ink text-cream hover:bg-ink/90 transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-base">Flashcards →</p>
+            <p className="text-xs text-cream/70 mt-0.5">Drill any section. IT ↔ EN. Shuffle. Offline.</p>
+          </div>
+          <span className="text-2xl">✦</span>
+        </div>
+      </Link>
 
       <div className="mb-5 relative">
         <input
