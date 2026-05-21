@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import SwRegister from '@/components/SwRegister'
 
 export const metadata: Metadata = {
   title: 'Lingua',
@@ -22,7 +23,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-cream text-ink antialiased">{children}</body>
+      <body className="bg-cream text-ink antialiased">
+        <SwRegister />
+        {children}
+      </body>
     </html>
   )
 }

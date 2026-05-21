@@ -19,6 +19,7 @@ const MODES = [
   { id: 'refresher', label: 'Refresher', sub: 'Grammar, gender, formal Lei.', href: '/refresher' },
   { id: 'warmup', label: 'Warmup', sub: 'Tongue twisters. Wake up the mouth.', href: '/warmup' },
   { id: 'favorites', label: 'Favorites', sub: 'Saved phrases.', href: '/favorites' },
+  { id: 'study-guide', label: 'Study Guide', sub: 'Full travel reference. Works offline.', href: '/study-guide', highlight: true },
 ]
 
 function isRecent(iso: string): boolean {
@@ -110,7 +111,9 @@ export default async function Dashboard() {
             key={mode.id}
             href={mode.href}
             className={`block p-4 rounded-xl border transition-colors ${
-              mode.primary
+              'highlight' in mode && mode.highlight
+                ? 'border-gold/60 bg-gold/5 hover:bg-gold/10'
+                : mode.primary
                 ? 'border-ink bg-white hover:bg-cream/50'
                 : 'border-line bg-white hover:bg-cream/50'
             }`}
@@ -120,6 +123,11 @@ export default async function Dashboard() {
               {mode.primary && (
                 <span className="text-[10px] uppercase tracking-wide text-ink">
                   primary
+                </span>
+              )}
+              {'highlight' in mode && mode.highlight && (
+                <span className="text-[10px] uppercase tracking-wide text-muted/70">
+                  offline
                 </span>
               )}
             </div>
