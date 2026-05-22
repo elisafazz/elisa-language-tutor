@@ -665,7 +665,7 @@ const exampleScenarios: ExampleScenario[] = [
 
 // ─── PINNED FOR THE TRIP (Elisa's must-haves) ────────────────────────────────
 
-const pinnedTrip: GuidePhrase[] = [
+export const pinnedTrip: GuidePhrase[] = [
   { italian: 'Possiamo sederci fuori?', english: 'Can we sit outside?' },
   { italian: 'Possiamo sederci dentro?', english: 'Can we sit inside?' },
   { italian: 'Ci porta...?', english: 'Can you bring us...? (formal)', note: '"Ci" = us. Pair with anything: ci porta dell\'acqua, ci porta il pane, ci porta il conto.' },

@@ -7,13 +7,14 @@ import {
   possessiveTable,
   possessiveExamples,
   numbersData,
+  pinnedTrip,
   type GuidePhrase,
   type VerbConjugation,
   type PastVerb,
   type ExampleScenario,
 } from '@/lib/content/italian-study-guide'
 import SaveButton from '@/components/SaveButton'
-import { loadSaved, makeSaveId, SAVED_EVENT } from '@/lib/saved-phrases'
+import { loadSaved, makeSaveId, SAVED_EVENT, seedSavedOnce } from '@/lib/saved-phrases'
 
 // ─── Search helpers ────────────────────────────────────────────────────────────
 
@@ -548,6 +549,12 @@ function SavedSection() {
 export default function StudyGuidePage() {
   const [rawQuery, setRawQuery] = useState('')
   const query = rawQuery.toLowerCase().trim()
+
+  // One-time seed: pre-save the pinned-trip phrases to the user's favorites
+  // on first visit. Re-running won't re-seed (flag in localStorage).
+  useEffect(() => {
+    seedSavedOnce(pinnedTrip.map((p) => p.italian))
+  }, [])
 
   const sections = studyGuideSections
 
