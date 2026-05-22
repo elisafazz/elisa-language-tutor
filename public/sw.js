@@ -1,4 +1,4 @@
-const CACHE = 'lingua-v5'
+const CACHE = 'lingua-v6'
 const OFFLINE_ROUTES = ['/', '/study-guide', '/study-guide/flashcards']
 const OFFLINE_ROUTE_SET = new Set(OFFLINE_ROUTES)
 
