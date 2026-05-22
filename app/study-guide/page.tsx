@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import OfflineNavigationLink from '@/components/OfflineNavigationLink'
 import {
   studyGuideSections,
   possessiveTable,
@@ -572,7 +573,7 @@ export default function StudyGuidePage() {
         <p className="text-sm text-muted mt-1">Italian travel reference. All offline.</p>
       </div>
 
-      <Link
+      <OfflineNavigationLink
         href="/study-guide/flashcards"
         className="block mb-5 p-4 rounded-xl border border-ink bg-ink text-cream hover:bg-ink/90 transition-colors"
       >
@@ -583,7 +584,7 @@ export default function StudyGuidePage() {
           </div>
           <span className="text-2xl">✦</span>
         </div>
-      </Link>
+      </OfflineNavigationLink>
 
       <div className="mb-5 relative">
         <input

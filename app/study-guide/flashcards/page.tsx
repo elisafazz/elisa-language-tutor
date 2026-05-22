@@ -1,10 +1,10 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import Link from 'next/link'
 import { buildAllFlashcards, type Flashcard, type FlashcardCategory } from '@/lib/flashcards-data'
 import SaveButton from '@/components/SaveButton'
 import { loadSaved, makeSaveId, SAVED_EVENT } from '@/lib/saved-phrases'
+import OfflineNavigationLink from '@/components/OfflineNavigationLink'
 
 type Direction = 'it-en' | 'en-it'
 type Mode = 'browse' | 'review'
@@ -162,9 +162,9 @@ export default function FlashcardsPage() {
   return (
     <main className="min-h-screen px-5 py-6 max-w-md mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-4">
-        <Link href="/study-guide" className="text-sm text-muted hover:text-ink">
+        <OfflineNavigationLink href="/study-guide" className="text-sm text-muted hover:text-ink">
           ← Study Guide
-        </Link>
+        </OfflineNavigationLink>
         <span className="text-xs text-muted">Flashcards</span>
       </header>
 

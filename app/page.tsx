@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import OfflineNavigationLink from '@/components/OfflineNavigationLink'
 import LanguageToggle from '@/components/LanguageToggle'
 import { getSessionSummary } from '@/lib/sessions'
 
@@ -21,6 +22,51 @@ const MODES = [
   { id: 'favorites', label: 'Favorites', sub: 'Saved phrases.', href: '/favorites' },
   { id: 'study-guide', label: 'Study Guide', sub: 'Full travel reference. Works offline.', href: '/study-guide', highlight: true },
 ]
+
+type Mode = (typeof MODES)[number]
+
+function ModeLink({ mode }: { mode: Mode }) {
+  const className = `block p-4 rounded-xl border transition-colors ${
+    'highlight' in mode && mode.highlight
+      ? 'border-gold/60 bg-gold/5 hover:bg-gold/10'
+      : mode.primary
+      ? 'border-ink bg-white hover:bg-cream/50'
+      : 'border-line bg-white hover:bg-cream/50'
+  }`
+
+  const content = (
+    <>
+      <div className="flex items-baseline justify-between">
+        <span className="text-base font-medium text-ink">{mode.label}</span>
+        {mode.primary && (
+          <span className="text-[10px] uppercase tracking-wide text-ink">
+            primary
+          </span>
+        )}
+        {'highlight' in mode && mode.highlight && (
+          <span className="text-[10px] uppercase tracking-wide text-muted/70">
+            offline
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-muted mt-1">{mode.sub}</p>
+    </>
+  )
+
+  if (mode.href === '/study-guide') {
+    return (
+      <OfflineNavigationLink href={mode.href} className={className}>
+        {content}
+      </OfflineNavigationLink>
+    )
+  }
+
+  return (
+    <Link href={mode.href} className={className}>
+      {content}
+    </Link>
+  )
+}
 
 function isRecent(iso: string): boolean {
   const t = new Date(iso).getTime()
@@ -107,32 +153,7 @@ export default async function Dashboard() {
       <section className="space-y-2">
         <p className="text-xs uppercase tracking-wide text-muted mb-3">All modes</p>
         {MODES.map((mode) => (
-          <Link
-            key={mode.id}
-            href={mode.href}
-            className={`block p-4 rounded-xl border transition-colors ${
-              'highlight' in mode && mode.highlight
-                ? 'border-gold/60 bg-gold/5 hover:bg-gold/10'
-                : mode.primary
-                ? 'border-ink bg-white hover:bg-cream/50'
-                : 'border-line bg-white hover:bg-cream/50'
-            }`}
-          >
-            <div className="flex items-baseline justify-between">
-              <span className="text-base font-medium text-ink">{mode.label}</span>
-              {mode.primary && (
-                <span className="text-[10px] uppercase tracking-wide text-ink">
-                  primary
-                </span>
-              )}
-              {'highlight' in mode && mode.highlight && (
-                <span className="text-[10px] uppercase tracking-wide text-muted/70">
-                  offline
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-muted mt-1">{mode.sub}</p>
-          </Link>
+          <ModeLink key={mode.id} mode={mode} />
         ))}
       </section>
 
