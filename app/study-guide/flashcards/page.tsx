@@ -4,12 +4,12 @@ import { useMemo, useState, useEffect } from 'react'
 import { buildAllFlashcards, type Flashcard, type FlashcardCategory } from '@/lib/flashcards-data'
 import SaveButton from '@/components/SaveButton'
 import { loadSaved, makeSaveId, SAVED_EVENT } from '@/lib/saved-phrases'
-import OfflineNavigationLink from '@/components/OfflineNavigationLink'
 
 type Direction = 'it-en' | 'en-it'
-type Mode = 'browse' | 'review'
+type Mode = 'browse' | 'yes' | 'no'
 
-const REVIEW_PILE_KEY = 'lingua-flashcards-review-v1'
+const YES_PILE_KEY = 'lingua-flashcards-yes-v1'
+const NO_PILE_KEY = 'lingua-flashcards-no-v1'
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -20,10 +20,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-function loadReviewPile(): Set<string> {
+function loadPile(key: string): Set<string> {
   if (typeof window === 'undefined') return new Set()
   try {
-    const raw = localStorage.getItem(REVIEW_PILE_KEY)
+    const raw = localStorage.getItem(key)
     if (!raw) return new Set()
     const parsed = JSON.parse(raw)
     return new Set(Array.isArray(parsed) ? parsed : [])
@@ -32,10 +32,10 @@ function loadReviewPile(): Set<string> {
   }
 }
 
-function saveReviewPile(pile: Set<string>) {
+function savePile(key: string, pile: Set<string>) {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(REVIEW_PILE_KEY, JSON.stringify(Array.from(pile)))
+    localStorage.setItem(key, JSON.stringify(Array.from(pile)))
   } catch {}
 }
 
@@ -46,17 +46,23 @@ export default function FlashcardsPage() {
     [categories]
   )
 
-  const [reviewPile, setReviewPile] = useState<Set<string>>(new Set())
+  const [yesPile, setYesPile] = useState<Set<string>>(new Set())
+  const [noPile, setNoPile] = useState<Set<string>>(new Set())
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    setReviewPile(loadReviewPile())
+    setYesPile(loadPile(YES_PILE_KEY))
+    setNoPile(loadPile(NO_PILE_KEY))
     setHydrated(true)
   }, [])
 
   useEffect(() => {
-    if (hydrated) saveReviewPile(reviewPile)
-  }, [reviewPile, hydrated])
+    if (hydrated) savePile(YES_PILE_KEY, yesPile)
+  }, [yesPile, hydrated])
+
+  useEffect(() => {
+    if (hydrated) savePile(NO_PILE_KEY, noPile)
+  }, [noPile, hydrated])
 
   const [mode, setMode] = useState<Mode>('browse')
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
@@ -66,9 +72,14 @@ export default function FlashcardsPage() {
   const [flipped, setFlipped] = useState(false)
   const [order, setOrder] = useState<number[]>([])
 
-  const reviewCards = useMemo(
-    () => allCardsCategory.cards.filter((c) => reviewPile.has(c.id)),
-    [allCardsCategory, reviewPile]
+  const yesCards = useMemo(
+    () => allCardsCategory.cards.filter((c) => yesPile.has(c.id)),
+    [allCardsCategory, yesPile]
+  )
+
+  const noCards = useMemo(
+    () => allCardsCategory.cards.filter((c) => noPile.has(c.id)),
+    [allCardsCategory, noPile]
   )
 
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
@@ -85,15 +96,18 @@ export default function FlashcardsPage() {
   )
 
   const activeCategory: FlashcardCategory = useMemo(() => {
-    if (mode === 'review') {
-      return { id: 'review', label: 'Review Pile', cards: reviewCards }
+    if (mode === 'yes') {
+      return { id: 'yes', label: 'Yes Pile', cards: yesCards }
+    }
+    if (mode === 'no') {
+      return { id: 'no', label: 'No Pile', cards: noCards }
     }
     if (selectedCategoryId === 'saved') {
       return { id: 'saved', label: '★ Saved (Favorites)', cards: savedCards }
     }
     if (selectedCategoryId === 'all') return allCardsCategory
     return categories.find((c) => c.id === selectedCategoryId) ?? allCardsCategory
-  }, [mode, reviewCards, selectedCategoryId, savedCards, allCardsCategory, categories])
+  }, [mode, yesCards, noCards, selectedCategoryId, savedCards, allCardsCategory, categories])
 
   useEffect(() => {
     const base = activeCategory.cards.map((_, i) => i)
@@ -125,52 +139,66 @@ export default function FlashcardsPage() {
     setFlipped(false)
   }
 
-  function markGotIt() {
+  function markYes() {
     if (!card) return
-    if (reviewPile.has(card.id)) {
-      setReviewPile((prev) => {
-        const n = new Set(prev)
-        n.delete(card.id)
-        return n
-      })
-    }
+    setYesPile((prev) => {
+      const n = new Set(prev)
+      n.add(card.id)
+      return n
+    })
+    setNoPile((prev) => {
+      const n = new Set(prev)
+      n.delete(card.id)
+      return n
+    })
     next()
   }
 
-  function markReview() {
+  function markNo() {
     if (!card) return
-    if (!reviewPile.has(card.id)) {
-      setReviewPile((prev) => {
-        const n = new Set(prev)
-        n.add(card.id)
-        return n
-      })
-    }
+    setNoPile((prev) => {
+      const n = new Set(prev)
+      n.add(card.id)
+      return n
+    })
+    setYesPile((prev) => {
+      const n = new Set(prev)
+      n.delete(card.id)
+      return n
+    })
     next()
   }
 
-  function clearReviewPile() {
-    if (typeof window !== 'undefined' && !window.confirm(`Clear ${reviewPile.size} cards from the review pile?`)) return
-    setReviewPile(new Set())
-    if (mode === 'review') setMode('browse')
+  function clearActivePile() {
+    if (mode === 'yes') {
+      if (typeof window !== 'undefined' && !window.confirm(`Clear ${yesPile.size} cards from the yes pile?`)) return
+      setYesPile(new Set())
+      setMode('browse')
+    }
+    if (mode === 'no') {
+      if (typeof window !== 'undefined' && !window.confirm(`Clear ${noPile.size} cards from the no pile?`)) return
+      setNoPile(new Set())
+      setMode('browse')
+    }
   }
 
   const front = direction === 'it-en' ? card?.italian : card?.english
   const back = direction === 'it-en' ? card?.english : card?.italian
-  const inPile = card ? reviewPile.has(card.id) : false
+  const inYesPile = card ? yesPile.has(card.id) : false
+  const inNoPile = card ? noPile.has(card.id) : false
 
   return (
     <main className="min-h-screen px-5 py-6 max-w-md mx-auto flex flex-col">
       <header className="flex items-center justify-between mb-4">
-        <OfflineNavigationLink href="/study-guide" className="text-sm text-muted hover:text-ink">
+        <a href="/study-guide" className="text-sm text-muted hover:text-ink">
           ← Study Guide
-        </OfflineNavigationLink>
+        </a>
         <span className="text-xs text-muted">Flashcards</span>
       </header>
 
       <div className="mb-4">
         <h1 className="font-serif text-2xl text-ink">Flashcards</h1>
-        <p className="text-xs text-muted mt-0.5">Tap card to flip. ✗ to drill again later.</p>
+        <p className="text-xs text-muted mt-0.5">Tap card to flip. Mark Yes or No to build offline piles.</p>
       </div>
 
       <div className="flex gap-2 mb-3">
@@ -183,13 +211,22 @@ export default function FlashcardsPage() {
           Browse
         </button>
         <button
-          onClick={() => setMode('review')}
-          disabled={reviewPile.size === 0}
+          onClick={() => setMode('yes')}
+          disabled={yesPile.size === 0}
           className={`flex-1 py-2 rounded-lg text-xs uppercase tracking-wide ${
-            mode === 'review' ? 'bg-terra text-cream' : 'bg-white text-terra border border-terra/40 disabled:opacity-40 disabled:border-line disabled:text-muted'
+            mode === 'yes' ? 'bg-sage text-cream' : 'bg-white text-sage border border-sage/40 disabled:opacity-40 disabled:border-line disabled:text-muted'
           }`}
         >
-          Review Pile ({reviewPile.size})
+          Yes ({yesPile.size})
+        </button>
+        <button
+          onClick={() => setMode('no')}
+          disabled={noPile.size === 0}
+          className={`flex-1 py-2 rounded-lg text-xs uppercase tracking-wide ${
+            mode === 'no' ? 'bg-terra text-cream' : 'bg-white text-terra border border-terra/40 disabled:opacity-40 disabled:border-line disabled:text-muted'
+          }`}
+        >
+          No ({noPile.size})
         </button>
       </div>
 
@@ -240,14 +277,16 @@ export default function FlashcardsPage() {
         </div>
       )}
 
-      {mode === 'review' && (
-        <div className="mb-4 flex items-center justify-between p-3 rounded-lg bg-terra/10 border border-terra/30">
+      {mode !== 'browse' && (
+        <div className={`mb-4 flex items-center justify-between p-3 rounded-lg border ${
+          mode === 'yes' ? 'bg-sage/10 border-sage/30' : 'bg-terra/10 border-terra/30'
+        }`}>
           <p className="text-xs text-ink">
-            Drilling <span className="font-medium">{reviewPile.size}</span> card{reviewPile.size !== 1 ? 's' : ''} you marked to review.
+            Drilling <span className="font-medium">{mode === 'yes' ? yesPile.size : noPile.size}</span> card{(mode === 'yes' ? yesPile.size : noPile.size) !== 1 ? 's' : ''} in the {mode === 'yes' ? 'yes' : 'no'} pile.
           </p>
           <button
-            onClick={clearReviewPile}
-            className="text-xs text-terra underline hover:no-underline"
+            onClick={clearActivePile}
+            className={`text-xs underline hover:no-underline ${mode === 'yes' ? 'text-sage-deep' : 'text-terra'}`}
           >
             Clear
           </button>
@@ -260,8 +299,11 @@ export default function FlashcardsPage() {
             <span className="text-xs text-muted">
               {index + 1} / {total}
             </span>
-            {inPile && (
-              <span className="text-[10px] uppercase tracking-wide text-terra">In review pile</span>
+            {inYesPile && (
+              <span className="text-[10px] uppercase tracking-wide text-sage">In yes pile</span>
+            )}
+            {inNoPile && (
+              <span className="text-[10px] uppercase tracking-wide text-terra">In no pile</span>
             )}
           </div>
 
@@ -290,16 +332,16 @@ export default function FlashcardsPage() {
           {flipped ? (
             <div className="flex gap-2 mb-3">
               <button
-                onClick={markReview}
+                onClick={markNo}
                 className="flex-1 py-4 rounded-lg bg-terra text-cream font-medium text-lg"
               >
-                ✗ Review
+                No
               </button>
               <button
-                onClick={markGotIt}
+                onClick={markYes}
                 className="flex-1 py-4 rounded-lg bg-sage text-cream font-medium text-lg"
               >
-                ✓ Got it
+                Yes
               </button>
             </div>
           ) : (
@@ -341,9 +383,9 @@ export default function FlashcardsPage() {
             </button>
           </div>
         </>
-      ) : mode === 'review' ? (
+      ) : mode !== 'browse' ? (
         <div className="text-center mt-12">
-          <p className="text-muted text-sm mb-3">Review pile is empty.</p>
+          <p className="text-muted text-sm mb-3">{mode === 'yes' ? 'Yes' : 'No'} pile is empty.</p>
           <button
             onClick={() => setMode('browse')}
             className="text-xs text-ink underline"
