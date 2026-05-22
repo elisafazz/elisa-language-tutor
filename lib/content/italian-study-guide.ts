@@ -413,23 +413,77 @@ const combinations: GuidePhrase[] = [
 // ─── POSSESSIVES (rendered separately as a table component) ───────────────────
 // The actual table is rendered in the page component. These are the travel examples.
 export const possessiveExamples: GuidePhrase[] = [
-  { italian: 'il mio passaporto / i miei passaporti', english: 'my passport / my passports' },
-  { italian: 'la mia patente / le mie chiavi', english: 'my driver\'s license / my keys' },
+  // MIO / MIA / MIEI / MIE (my)
+  { italian: 'il mio passaporto', english: 'my passport' },
+  { italian: 'i miei passaporti', english: 'my passports' },
+  { italian: 'la mia patente', english: 'my driver\'s license' },
+  { italian: 'la mia valigia', english: 'my suitcase' },
+  { italian: 'le mie valigie', english: 'my suitcases' },
+  { italian: 'le mie chiavi', english: 'my keys' },
+  { italian: 'le mie scarpe', english: 'my shoes' },
+  { italian: 'i miei amici', english: 'my friends' },
+  { italian: 'i miei vestiti', english: 'my clothes' },
   { italian: 'la mia prenotazione', english: 'my reservation' },
-  { italian: 'la mia valigia / le mie valigie', english: 'my suitcase / my suitcases' },
-  { italian: 'il tuo passaporto / i tuoi documenti', english: 'your passport / your documents' },
-  { italian: 'la sua borsa', english: 'her bag', note: 'sua = his or her, context clarifies' },
-  { italian: 'il suo passaporto', english: 'his / her passport' },
+  { italian: 'la mia macchina', english: 'my car' },
+  { italian: 'il mio telefono', english: 'my phone' },
+  { italian: 'i miei occhiali', english: 'my glasses' },
+
+  // TUO / TUA / TUOI / TUE (your, informal)
+  { italian: 'il tuo passaporto', english: 'your passport (informal)' },
+  { italian: 'la tua camera', english: 'your room' },
+  { italian: 'i tuoi documenti', english: 'your documents' },
+  { italian: 'le tue scarpe', english: 'your shoes' },
+  { italian: 'il tuo telefono', english: 'your phone' },
+  { italian: 'la tua valigia', english: 'your suitcase' },
+  { italian: 'i tuoi amici', english: 'your friends' },
+
+  // SUO / SUA / SUOI / SUE (his / her / formal your)
+  { italian: 'il suo passaporto', english: 'his / her passport', note: 'sua = his or her — context clarifies.' },
+  { italian: 'la sua borsa', english: 'his / her bag' },
+  { italian: 'i suoi documenti', english: 'his / her documents' },
+  { italian: 'le sue chiavi', english: 'his / her keys' },
+  { italian: 'la sua valigia', english: 'his / her suitcase' },
+  { italian: 'le sue valigie', english: 'his / her suitcases' },
+  { italian: 'il suo cane', english: 'his / her dog' },
+  { italian: 'la sua famiglia', english: 'his / her family' },
+
+  // NOSTRO / NOSTRA / NOSTRI / NOSTRE (our)
   { italian: 'la nostra camera', english: 'our hotel room' },
   { italian: 'la nostra prenotazione', english: 'our reservation' },
+  { italian: 'il nostro tavolo', english: 'our table' },
   { italian: 'i nostri passaporti', english: 'our passports' },
   { italian: 'le nostre valigie', english: 'our suitcases' },
-  { italian: 'il nostro tavolo', english: 'our table' },
+  { italian: 'i nostri biglietti', english: 'our tickets' },
+  { italian: 'la nostra macchina', english: 'our car' },
+  { italian: 'le nostre amiche', english: 'our friends (all f)' },
+  { italian: 'i nostri amici', english: 'our friends (mixed or m)' },
+
+  // VOSTRO / VOSTRA / VOSTRI / VOSTRE (your, plural)
+  { italian: 'il vostro tavolo', english: 'your table (plural you)' },
+  { italian: 'la vostra prenotazione', english: 'your reservation (plural you)' },
+  { italian: 'il vostro hotel', english: 'your hotel' },
+  { italian: 'il vostro indirizzo', english: 'your address' },
+
+  // LORO (their)
   { italian: 'i loro bagagli', english: 'their luggage' },
   { italian: 'la loro prenotazione', english: 'their reservation' },
-  { italian: 'mia madre / mio padre', english: 'my mother / my father', note: 'Singular family members: NO article. mia madre (not la mia madre). BUT: i miei genitori (pl family = article).' },
-  { italian: 'mia sorella / mio fratello', english: 'my sister / my brother', note: 'No article for singular family nouns.' },
-  { italian: 'la mia amica / il mio amico', english: 'my friend (f) / my friend (m)', note: 'Friends are not family — keep the article.' },
+  { italian: 'la loro macchina', english: 'their car' },
+  { italian: 'il loro hotel', english: 'their hotel' },
+  { italian: 'le loro valigie', english: 'their suitcases' },
+  { italian: 'la loro casa', english: 'their house' },
+
+  // FAMILY EXCEPTIONS
+  { italian: 'mia madre', english: 'my mother', note: 'Singular family: NO article. Not "la mia madre."' },
+  { italian: 'mio padre', english: 'my father' },
+  { italian: 'mia sorella', english: 'my sister' },
+  { italian: 'mio fratello', english: 'my brother' },
+  { italian: 'tua zia / tuo zio', english: 'your aunt / your uncle' },
+  { italian: 'sua nonna / suo nonno', english: 'his/her grandmother / grandfather' },
+  { italian: 'i miei genitori', english: 'my parents', note: 'PLURAL family = article comes back: i miei genitori, i miei fratelli.' },
+  { italian: 'i miei nonni', english: 'my grandparents' },
+  { italian: 'i miei fratelli', english: 'my brothers / siblings' },
+  { italian: 'la mia amica / il mio amico', english: 'my friend (f) / my friend (m)', note: 'Friends are NOT family — keep the article.' },
+  { italian: 'il loro nonno', english: 'their grandfather', note: 'EXCEPTION: loro ALWAYS keeps the article, even with singular family.' },
 ]
 
 export const possessiveTable = {
@@ -607,6 +661,33 @@ const exampleScenarios: ExampleScenario[] = [
     ],
     heritageTip: '★ The "present + da" rule is what separates a fluent heritage speaker from a textbook learner. Drill it: "Vivo a Los Angeles da venti anni" (I have lived in LA for 20 years). "Studio italiano da sempre" (I have studied Italian forever). "Sono qui da un\'ora" (I have been here for an hour). All PRESENT tense in Italian.',
   },
+]
+
+// ─── PINNED FOR THE TRIP (Elisa's must-haves) ────────────────────────────────
+
+const pinnedTrip: GuidePhrase[] = [
+  { italian: 'Possiamo sederci fuori?', english: 'Can we sit outside?' },
+  { italian: 'Possiamo sederci dentro?', english: 'Can we sit inside?' },
+  { italian: 'Ci porta...?', english: 'Can you bring us...? (formal)', note: '"Ci" = us. Pair with anything: ci porta dell\'acqua, ci porta il pane, ci porta il conto.' },
+  { italian: 'Ci porta i menu, per favore?', english: 'Can you bring us the menus, please?' },
+  { italian: 'Ci porta dell\'acqua, per favore?', english: 'Can you bring us some water, please?' },
+  { italian: 'Ci porta il conto?', english: 'Can you bring us the check?' },
+  { italian: 'Siamo a posto, grazie.', english: 'We\'re all set, thanks.', note: 'Literally "we\'re in place." Means you\'re done / good / don\'t need anything more.' },
+  { italian: 'Stiamo tre settimane in totale: una settimana in Sardegna, poi andiamo a Genova e poi in Toscana.', english: 'We\'re staying three weeks total: one week in Sardinia, then we go to Genoa and then to Tuscany.' },
+  { italian: 'Come arriviamo alla stazione?', english: 'How do we get to the station?' },
+  { italian: 'Come arriviamo al centro?', english: 'How do we get downtown / to the center?' },
+  { italian: 'Come arriviamo a Genova?', english: 'How do we get to Genoa?', note: 'Pattern: "Come arriviamo a [città]?" — drop the article with city names.' },
+  { italian: 'Per iniziare, prosciutto e melone. Poi prendiamo la pasta. E come secondo, il pollo e la bistecca.', english: 'To start, prosciutto and melon. Then we\'ll have the pasta. And for the second course, the chicken and the steak.', note: 'A full restaurant order in one breath. Per iniziare = to start. Come secondo = as a second course.' },
+  { italian: 'sopra', english: 'above / on top of' },
+  { italian: 'sotto', english: 'below / under' },
+  { italian: 'a destra', english: 'to the right' },
+  { italian: 'a sinistra', english: 'to the left' },
+  { italian: 'in cima', english: 'on top / at the top', note: 'Used for vertical "on top" — in cima alla collina = on top of the hill.' },
+  { italian: 'in fondo', english: 'at the bottom / at the back / at the far end', note: 'In fondo alla strada = at the end of the street. In fondo al menu = at the bottom of the menu.' },
+  { italian: 'davanti / dietro', english: 'in front / behind' },
+  { italian: 'vicino a / lontano da', english: 'near to / far from' },
+  { italian: 'di fianco a / accanto a', english: 'next to / beside' },
+  { italian: 'di fronte a', english: 'across from / facing' },
 ]
 
 // ─── VOCABULARY BANK ─────────────────────────────────────────────────────────
@@ -1093,6 +1174,7 @@ const cathyPhrases: GuidePhrase[] = [
 // ─── SECTION REGISTRY ─────────────────────────────────────────────────────────
 
 export const studyGuideSections: GuideSection[] = [
+  { type: 'phrases', id: 'pinned-trip', title: 'Pinned for the Trip', subtitle: 'Your must-haves', phrases: pinnedTrip },
   { type: 'example-scenarios', id: 'example-scenarios', title: 'Example Scenarios', subtitle: 'Dialogue + grammar breakdown', scenarios: exampleScenarios },
   { type: 'phrases', id: 'survival', title: 'Survival Phrases', subtitle: 'Frasi essenziali', phrases: survival },
   { type: 'phrases', id: 'heritage-openers', title: 'Heritage Openers', subtitle: 'Per i miei nonni', phrases: heritageOpeners },

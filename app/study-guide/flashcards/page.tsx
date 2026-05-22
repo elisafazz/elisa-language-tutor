@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { buildAllFlashcards, type Flashcard, type FlashcardCategory } from '@/lib/flashcards-data'
+import SaveButton from '@/components/SaveButton'
+import { loadSaved, makeSaveId, SAVED_EVENT } from '@/lib/saved-phrases'
 
 type Direction = 'it-en' | 'en-it'
 type Mode = 'browse' | 'review'
@@ -69,13 +71,29 @@ export default function FlashcardsPage() {
     [allCardsCategory, reviewPile]
   )
 
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    const refresh = () => setSavedIds(loadSaved())
+    refresh()
+    window.addEventListener(SAVED_EVENT, refresh)
+    return () => window.removeEventListener(SAVED_EVENT, refresh)
+  }, [])
+
+  const savedCards = useMemo(
+    () => allCardsCategory.cards.filter((c) => savedIds.has(makeSaveId(c.italian))),
+    [allCardsCategory, savedIds]
+  )
+
   const activeCategory: FlashcardCategory = useMemo(() => {
     if (mode === 'review') {
       return { id: 'review', label: 'Review Pile', cards: reviewCards }
     }
+    if (selectedCategoryId === 'saved') {
+      return { id: 'saved', label: '★ Saved (Favorites)', cards: savedCards }
+    }
     if (selectedCategoryId === 'all') return allCardsCategory
     return categories.find((c) => c.id === selectedCategoryId) ?? allCardsCategory
-  }, [mode, reviewCards, selectedCategoryId, allCardsCategory, categories])
+  }, [mode, reviewCards, selectedCategoryId, savedCards, allCardsCategory, categories])
 
   useEffect(() => {
     const base = activeCategory.cards.map((_, i) => i)
@@ -210,6 +228,9 @@ export default function FlashcardsPage() {
             className="w-full px-3 py-2 rounded-lg border border-line bg-white text-ink text-sm focus:outline-none focus:border-ink"
           >
             <option value="all">All categories ({allCardsCategory.cards.length} cards)</option>
+            {savedCards.length > 0 && (
+              <option value="saved">★ Saved / Favorites ({savedCards.length})</option>
+            )}
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label} ({c.cards.length})
@@ -306,10 +327,11 @@ export default function FlashcardsPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-wide text-muted">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-wide text-muted flex-1 truncate">
               {card.category}
             </p>
+            <SaveButton italian={card.italian} size="md" />
             <button
               onClick={reshuffle}
               className="text-xs text-muted hover:text-ink"

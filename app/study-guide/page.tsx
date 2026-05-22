@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import {
   studyGuideSections,
@@ -12,6 +12,8 @@ import {
   type PastVerb,
   type ExampleScenario,
 } from '@/lib/content/italian-study-guide'
+import SaveButton from '@/components/SaveButton'
+import { loadSaved, makeSaveId, SAVED_EVENT } from '@/lib/saved-phrases'
 
 // ─── Search helpers ────────────────────────────────────────────────────────────
 
@@ -57,10 +59,13 @@ function sectionMatchCount(section: (typeof studyGuideSections)[number], q: stri
 
 function PhraseRow({ phrase }: { phrase: GuidePhrase }) {
   return (
-    <div className="py-3 border-b border-line last:border-b-0">
-      <p className="text-ink font-medium leading-snug">{phrase.italian}</p>
-      <p className="text-muted text-sm mt-0.5">{phrase.english}</p>
-      {phrase.note && <p className="text-muted text-xs italic mt-1">{phrase.note}</p>}
+    <div className="py-3 border-b border-line last:border-b-0 flex items-start gap-2">
+      <div className="flex-1 min-w-0">
+        <p className="text-ink font-medium leading-snug">{phrase.italian}</p>
+        <p className="text-muted text-sm mt-0.5">{phrase.english}</p>
+        {phrase.note && <p className="text-muted text-xs italic mt-1">{phrase.note}</p>}
+      </div>
+      <SaveButton italian={phrase.italian} />
     </div>
   )
 }
@@ -146,17 +151,20 @@ function ScenarioCard({ scenario }: { scenario: ExampleScenario }) {
           {scenario.dialogue.map((line, i) => (
             <div
               key={i}
-              className={`p-3 rounded-lg ${
+              className={`p-3 rounded-lg flex items-start gap-2 ${
                 line.speaker === 'you'
                   ? 'bg-sage/10 border-l-2 border-sage'
                   : 'bg-gold/10 border-l-2 border-gold'
               }`}
             >
-              <p className="text-[10px] uppercase tracking-wide text-muted mb-1">
-                {line.speaker === 'you' ? 'You' : line.speakerLabel || 'Them'}
-              </p>
-              <p className="text-ink font-medium leading-snug">{line.italian}</p>
-              <p className="text-muted text-sm mt-1">{line.english}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-wide text-muted mb-1">
+                  {line.speaker === 'you' ? 'You' : line.speakerLabel || 'Them'}
+                </p>
+                <p className="text-ink font-medium leading-snug">{line.italian}</p>
+                <p className="text-muted text-sm mt-1">{line.english}</p>
+              </div>
+              <SaveButton italian={line.italian} />
             </div>
           ))}
         </div>
@@ -419,7 +427,7 @@ function Section({
 
           {section.type === 'vocab' && (
             <div className="py-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              <div className="grid grid-cols-1 gap-1">
                 {(query
                   ? section.items.filter((it) =>
                       it.italian.toLowerCase().includes(query) ||
@@ -428,9 +436,10 @@ function Section({
                     )
                   : section.items
                 ).map((item, i) => (
-                  <div key={i} className="flex items-baseline gap-3 py-2 px-2 border-b border-line/40 last:border-b-0">
-                    <span className="text-ink font-medium flex-1">{item.italian}</span>
-                    <span className="text-muted text-sm flex-1 text-right">{item.english}</span>
+                  <div key={i} className="flex items-center gap-2 py-2 px-2 border-b border-line/40 last:border-b-0">
+                    <span className="text-ink font-medium flex-1 min-w-0">{item.italian}</span>
+                    <span className="text-muted text-sm flex-1 min-w-0 text-right truncate">{item.english}</span>
+                    <SaveButton italian={item.italian} />
                   </div>
                 ))}
               </div>
@@ -468,6 +477,73 @@ function Section({
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
+
+type FlatPhrase = { italian: string; english: string; note?: string; saveId: string; sourceLabel: string }
+
+function buildFlatIndex(): FlatPhrase[] {
+  const out: FlatPhrase[] = []
+  for (const s of studyGuideSections) {
+    if (s.type === 'phrases' || s.type === 'combinations') {
+      for (const p of s.phrases) out.push({ italian: p.italian, english: p.english, note: p.note, saveId: makeSaveId(p.italian), sourceLabel: s.title })
+    } else if (s.type === 'vocab') {
+      for (const it of s.items) out.push({ italian: it.italian, english: it.english, note: it.note, saveId: makeSaveId(it.italian), sourceLabel: s.title })
+    } else if (s.type === 'past') {
+      for (const p of s.travelPhrases) out.push({ italian: p.italian, english: p.english, note: p.note, saveId: makeSaveId(p.italian), sourceLabel: 'Past Tense' })
+    } else if (s.type === 'example-scenarios') {
+      for (const sc of s.scenarios) {
+        for (const line of sc.dialogue) out.push({ italian: line.italian, english: line.english, saveId: makeSaveId(line.italian), sourceLabel: sc.title })
+      }
+    }
+  }
+  // Include possessive examples
+  for (const p of possessiveExamples) out.push({ italian: p.italian, english: p.english, note: p.note, saveId: makeSaveId(p.italian), sourceLabel: 'Possessives' })
+  // Numbers time phrases
+  for (const p of numbersData.time) out.push({ italian: p.italian, english: p.english, note: p.note, saveId: makeSaveId(p.italian), sourceLabel: 'Time' })
+  return out
+}
+
+function SavedSection() {
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const flat = useMemo(() => buildFlatIndex(), [])
+
+  useEffect(() => {
+    const refresh = () => setSavedIds(loadSaved())
+    refresh()
+    window.addEventListener(SAVED_EVENT, refresh)
+    return () => window.removeEventListener(SAVED_EVENT, refresh)
+  }, [])
+
+  const savedPhrases = useMemo(
+    () => flat.filter((p) => savedIds.has(p.saveId)),
+    [flat, savedIds]
+  )
+
+  if (savedPhrases.length === 0) return null
+
+  return (
+    <div className="border border-gold/40 rounded-xl overflow-hidden mb-3 bg-gold/5">
+      <div className="px-4 py-3 bg-gold/15 flex items-center justify-between">
+        <div>
+          <p className="font-medium text-base text-ink">★ Your Favorites</p>
+          <p className="text-xs text-muted">{savedPhrases.length} saved phrase{savedPhrases.length !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
+      <div className="px-4 py-2 bg-white">
+        {savedPhrases.map((p, i) => (
+          <div key={i} className="py-3 border-b border-line last:border-b-0 flex items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-ink font-medium leading-snug">{p.italian}</p>
+              <p className="text-muted text-sm mt-0.5">{p.english}</p>
+              {p.note && <p className="text-muted text-xs italic mt-1">{p.note}</p>}
+              <p className="text-[10px] uppercase tracking-wide text-muted/70 mt-1">{p.sourceLabel}</p>
+            </div>
+            <SaveButton italian={p.italian} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function StudyGuidePage() {
   const [rawQuery, setRawQuery] = useState('')
@@ -521,6 +597,8 @@ export default function StudyGuidePage() {
           </button>
         )}
       </div>
+
+      <SavedSection />
 
       <div>
         {sections.map((section, i) => (
